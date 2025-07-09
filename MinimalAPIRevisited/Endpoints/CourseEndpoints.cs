@@ -10,14 +10,24 @@ public static class CourseEndpoints
         app.MapGet("/courses/{id}", GetCourseById);
     }
 
-    private static IResult GetCoursed(CourseData data, string? courseType, string? search, int? delay)
+    private static async Task<IResult> GetCoursed(CourseData data, string? courseType, string? search, int? delay)
     {
         var output = data.Courses;
 
-
-        if (output == null)
+        if (string.IsNullOrWhiteSpace(courseType) == false)
         {
-            return Results.NotFound();
+            output = output.Where(c => c.courseType.Equals(courseType, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        
+        if (string.IsNullOrWhiteSpace(search) == false)
+        {
+            output = output.FindAll(c => c.courseName.Contains(search, StringComparison.OrdinalIgnoreCase) &&
+                                         c.shortDescription.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (delay.HasValue && delay > 0)
+        {
+            await Task.Delay(delay.Value);
         }
 
         return Results.Ok(output);
